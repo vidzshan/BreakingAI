@@ -1,112 +1,156 @@
 # BreakingAI
 HPI-GCN Project Structure Analysis
 
-This document provides a deep analysis of the HPI-GCN project structure, detailing every Python file (excluding the discard folder) and defining the internal structure of the dataset folders.
+This document provides a structured, indented overview of the HPI-GCN project layout. Every Python file (except the `discard` folder) is listed and the internal dataset folder structure is described.
+
+---
 
 1. Top-Level Entry Points & Scripts
-These files reside in the project root and serve as the primary interfaces for training, inference, and visualization.
+   - These files live in the project root and serve as the main interfaces for training, inference, and visualization.
+     - `main.py`  
+       : Central entry point for the training framework (likely uses `argparse` to dispatch tasks).
+     - `app.py`  
+       : Gradio-based web app for interactive demos and visualization.
+     - `audit_generator.py`  
+       : Script to audit or validate the generator's outputs.
+     - `audition_checkpoints.py`  
+       : Utility to quick-check multiple model checkpoints (e.g., generate samples from each).
+     - `check_progress_anchor.py`  
+       : Tool to monitor training progress, possibly against a reference "anchor" set.
+     - `debug_visualize.py`  
+       : Lightweight script for visualization debugging without the full app.
+     - `demo_inference_discriminator.py`  
+       : Run inference specifically through the discriminator (classification / quality scoring).
+     - `evaluate_brace_final.py`  
+       : Final evaluation script for the BRACE dataset model.
+     - `audio_brace_loader.py`  
+       : Specialized dataloader / preprocessor for audio in the BRACE dataset.
 
-main.py
-: The central entry point for the training framework (likely utilizing argparse to dispatch to specific processors).
-app.py
-: A Gradio-based web application for interactive demonstration and visualization of the model.
-audit_generator.py
-: Script for auditing or validating the generator's outputs.
-audition_checkpoints.py
-: Utility to quick-check multiple model checkpoints (e.g., generating samples from each to see progress).
-check_progress_anchor.py
-: A tool to monitor training progress, possibly against a reference "anchor" set.
-debug_visualize.py
-: A lightweight script for debugging visualization logic without the full app overhead.
-demo_inference_discriminator.py
-: Specialized script for running inference specifically through the discriminator (e.g., for classification or quality scoring).
-evaluate_brace_final.py
-: Final evaluation script for the BRACE dataset model.
-audio_brace_loader.py
-: A specialized dataloader or preprocessor for the audio component of the BRACE dataset.
-2. Core Model Architecture (model/)
-Contains the definitions of the neural networks (Generator, Discriminator, and building blocks).
+2. Core Model Architecture (`model/`)
+   - Contains network definitions (Generator, Discriminator, GCN building blocks).
+     - `model/generator.py`  
+       : Generator architecture (likely RNN/GRU-based).
+     - `model/HPI_GCN_OP.py`  
+       : Object-Pose GCN — a GCN for human pose, focusing on object interaction or absolute pose.
+     - `model/HPI_GCN_RP.py`  
+       : Relative-Pose GCN — focuses on relative joint positions/motion.
+     - `model/REP_block/`  
+       : Re-parameterization blocks for efficient GCN/TCN architectures.
+         - `model/REP_block/REP_GCN.py`  
+           : Reparameterizable Graph Convolution implementation.
+         - `model/REP_block/REP_TCN.py`  
+           : Reparameterizable Temporal Convolution implementation.
+         - `model/REP_block/transforms.py`  
+           : Tensor transformations for these blocks.
 
-model/generator.py
-: The generative model architecture (likely RNN/GRU based).
-model/HPI_GCN_OP.py
-: Object-Pose GCN. A Graph Convolutional Network designed to handle human pose data, likely focusing on object interaction or absolute pose.
-model/HPI_GCN_RP.py
-: Relative-Pose GCN. A variation of the GCN focusing on relative joint positions or motions.
-model/REP_block/: Contains re-parameterization blocks for optimizing the GCNs.
-model/REP_block/REP_GCN.py: Reparameterizable Graph Convolution implementation.
-model/REP_block/REP_TCN.py: Reparameterizable Temporal Convolution implementation.
-model/REP_block/transforms.py: Tensor transformations specific to these blocks.
-3. Data Feeders (feeders/)
-Handles data loading, batching, and preprocessing for different datasets.
+3. Data Feeders (`feeders/`)
+   - Data loading, batching, and preprocessing for datasets.
+     - `feeders/feeder_ntu.py`  
+       : Data loader for NTU RGB+D dataset.
+     - `feeders/feeder_ucla.py`  
+       : Data loader for NW-UCLA dataset.
+     - `feeders/bone_pairs.py`  
+       : Definitions of bone connections (skeletal topology) used in preprocessing.
+     - `feeders/tools.py`  
+       : General data manipulation utilities (augmentation, normalization, etc.).
 
-feeders/feeder_ntu.py: Data loader for the NTU RGB+D dataset.
-feeders/feeder_ucla.py: Data loader for the NW-UCLA dataset.
-feeders/bone_pairs.py: Definitions of bone connections (skeletal topology) used for preprocessing.
-feeders/tools.py: General data manipulation tools (augmentation, normalization).
-4. Graph Topologies (graph/)
-Defines the adjacency matrices and skeletal graphs used by the GCNs.
+4. Graph Topologies (`graph/`)
+   - Adjacency matrices and skeletal graphs for the GCNs.
+     - `graph/coco_17.py`  
+       : COCO 17-keypoint skeletal graph definition.
+     - `graph/ntu_rgb_d.py`  
+       : NTU RGB+D skeletal graph (25 joints) definition.
+     - `graph/ucla.py`  
+       : NW-UCLA skeletal graph definition.
+     - `graph/tools.py`  
+       : Graph utility functions (e.g., adjacency normalization).
 
-graph/coco_17.py: The COCO 17-keypoint skeletal graph definition.
-graph/ntu_rgb_d.py: The NTU RGB+D skeletal graph definition (25 joints).
-graph/ucla.py: The NW-UCLA skeletal graph definition.
-graph/tools.py: Graph utility functions (e.g., normalizing adjacency matrices).
-5. The "SASAKI" Brain (SASAKI/)
-This folder appears to contain the high-level decision logic for the Neuro-Symbolic aspect of the system (likely for the "Improvisation" or logic-driven generation).
+5. The "SASAKI" Brain (`SASAKI/`)
+   - High-level decision logic for the neuro-symbolic / improvisation system.
+     - `SASAKI/ImprovisationDecisionEngine.py`  
+       : Python logic engine for improvisation decisions.
+     - `SASAKI/Improvisation_SLM.py`  
+       : Integrates a Small Language Model or symbolic logic for improvisation.
+     - YAML configs (control decision trees / behavior flows):
+       - `ImprovisationDecision.yml`
+       - `ImprovisationFlow.yml`
+       - `coherence.yml`
+       - `genesys.yml`
+       - `motion.yml`
+       - `stillness.yml`
 
-SASAKI/ImprovisationDecisionEngine.py: The Python logic engine driving improvisation decisions.
-SASAKI/Improvisation_SLM.py: Likely "Small Language Model" or "Symbolic Logic Model" integration for improvisation.
-YAML Configs:
-ImprovisationDecision.yml, ImprovisationFlow.yml: Configuration for decision trees/flow.
-coherence.yml, genesys.yml, motion.yml, stillness.yml: Behavior profiles or state definitions.
 6. Dataset Structures
-data/brace/ (Processed Training Data)
-This folder serves as the Training Input Source. It contains pre-processed, serialized numpy files ready for the data feeders.
+   - data/brace/ (Processed Training Data)
+     - `data/brace/`  
+       : Processed, serialized NumPy files used as training input.
+         - `BRACE_centered_aug.npz`  
+           : Centered and augmented pose sequences — main training data.
+         - `BRACE_fixed_topology_v3.npz`  
+           : Version with standardized/corrected skeletal topology (v3).
+   - brace/ (Source Raw Dataset)
+     - `brace/`  
+       : Raw multi-modal data before compilation into `.npz`.
+         - `brace/dataset/`  
+           : Individual sequence files.
+         - `brace/audio_features/`  
+           : Pre-extracted audio features organized by Year/VideoID (e.g., `2011/3rIk56dcBTM/`).
+         - `brace/manual_keypoints/`  
+           : Manually annotated / corrected keypoints.
+         - `brace/annotations/`  
+           : Label annotations (genre, move type, etc.).
+         - `brace/videos_info.csv`  
+           : Metadata linking video IDs to descriptions / labels.
+   - data/ (Benchmark Datasets)
+     - `data/nturgbd_raw/` : Raw skeleton files from NTU RGB+D.
+     - `data/ntu120/`      : Processed NTU RGB+D 120 dataset.
+     - `data/NW-UCLA/`     : NW-UCLA dataset.
+     - `data/ntu/`         : NTU RGB+D (60 classes).
 
-BRACE_centered_aug.npz: The main training file, containing centered and augmented pose sequences.
-BRACE_fixed_topology_v3.npz: A version with corrected or standardized skeletal topology (Version 3).
-brace/ (Source Raw Dataset)
-This folder contains the Raw Multi-Modal Data before it is compiled into .npz files.
+7. Model Checkpoints (`pretrained_models/`)
+   - Trained weights and checkpoint history.
+     - `pretrained_models/brace_final_model.pt`  
+       : Final, fully trained model for BRACE.
+     - `pretrained_models/brace_finetuned.pt`  
+       : Fine-tuned variant.
+     - `pretrained_models/ntu120_pretrained.pt`  
+       : Base model pretrained on NTU-120 for transfer learning.
+     - `pretrained_models/generator_checkpoints/`  
+       : History of generator weights by epoch.
+     - Example snapshots:
+       - `generator_clean_ep5.pt`
+       - `generator_clean_ep10.pt`
+       - `generator_clean_ep15.pt`
 
-brace/dataset/: The individual sequence files.
-brace/audio_features/: Pre-extracted audio features organized by Year/VideoID (e.g., 2011/3rIk56dcBTM/).
-brace/manual_keypoints/: Manually annotated or corrected keypoint data.
-brace/annotations/: Label annotations (genre, move type, etc.).
-brace/videos_info.csv: Metadata CSV linking video IDs to descriptions/labels.
-data/ (Benchmark Datasets)
-Standard academic datasets for action recognition/generation.
+8. Web / Mobile Application (`my-app/`)
+   - User interface code and mobile starter.
+     - `my-app/backend.py`  
+       : Python backend logic.
+     - `my-app/frontend.py`  
+       : Python frontend (Streamlit / similar).
+     - `my-app/my-app.py`  
+       : Main app entry point.
+     - `my-app/starter-for-react-native/`  
+       : React Native starter code for mobile app.
 
-data/nturgbd_raw/: The raw skeleton files from NTU RGB+D.
-data/ntu120/: Processed NTU RGB+D 120 dataset.
-data/NW-UCLA/: The NW-UCLA dataset.
-data/ntu/: Standard NTU RGB+D (60 classes) data.
-7. Model Checkpoints (pretrained_models/)
-Stores trained weights and checkpoint history.
-
-brace_final_model.pt: The definitive, fully trained model for the BRACE dataset.
-brace_finetuned.pt: A version of the model fine-tuned on specific data.
-ntu120_pretrained.pt: Base model pretrained on NTU-120 (likely used for transfer learning).
-generator_checkpoints/: Directory containing history of generator weights during training.
-generator_clean_ep{5,10,15}.pt: Snapshots of the generator at specific epochs.
-8. Web/Mobile Application (my-app/)
-Contains source code for user interfaces.
-
-my-app/backend.py: Python backend logic for the app.
-my-app/frontend.py: Python-based frontend (possibly Streamlit or similar).
-my-app/my-app.py: Main app entry point.
-my-app/starter-for-react-native/: Source code for a React Native mobile application.
 9. Utilities & Libraries
-torchlight/
-A custom utility library (possibly a submodule or vendored library) for PyTorch training loops.
+   - `torchlight/`  
+     : Custom / vendored PyTorch utilities.
+       - `torchlight/torchlight/gpu.py` : GPU management utilities.
+       - `torchlight/torchlight/util.py`: Generic I/O and logging utilities.
+   - `config/`  
+     : Configuration sets for training runs.
+       - `config/nturgbd120-cross-subject/`
+         - `HPI_GCN_OP.yaml` : Object-Pose model config.
+         - `HPI_GCN_RP.yaml` : Relative-Pose model config.
 
-torchlight/torchlight/gpu.py: GPU management utilities.
-torchlight/torchlight/util.py: General I/O and logging utilities.
-config/
-Configuration files for training runs.
-
-config/nturgbd120-cross-subject/:
-HPI_GCN_OP.yaml: Config for Object-Pose model.
-HPI_GCN_RP.yaml: Config for Relative-Pose model.
 10. Presentation & Output
-ppt/render_architecture.py: Script to generate professional architecture diagrams for the paper/presentation.
-animation/: Stores generated GIFs and videos used for demos and validation (e.g., Final_Footwork.gif, Scientific_Proof.gif).
+    - `ppt/render_architecture.py`  
+      : Script to generate architecture diagrams for papers / presentations.
+    - `animation/`  
+      : Generated GIFs and videos used for demos and validation (e.g., `Final_Footwork.gif`, `Scientific_Proof.gif`).
+
+---
+Notes
+- This README excludes any "discard" folder contents (as originally requested).
+- Filenames and folder names are shown with trailing slashes where appropriate to indicate directories.
+- If you want this converted into a table-of-contents with direct links to files in the repository (or reorganized into a machine-readable manifest), tell me which format you prefer and I will produce it.
