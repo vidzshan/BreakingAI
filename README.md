@@ -1,5 +1,6 @@
 # BreakingAI
 HPI-GCN Project Structure Analysis
+
 This document provides a deep analysis of the HPI-GCN project structure, detailing every Python file (excluding the discard folder) and defining the internal structure of the dataset folders.
 
 1. Top-Level Entry Points & Scripts
